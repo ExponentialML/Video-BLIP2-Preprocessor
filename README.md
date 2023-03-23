@@ -12,7 +12,7 @@ pip install -r requirements.txt
 ## Running
 
 ```bash
-python preprocess.py --video_directory <your video path> --config_name "My Videos" --config_save_name "my_videos"
+python preprocess.py --video_directory <your path of videos (vid1.mp4, vd2.mp4, etc.)> --config_name "My Videos" --config_save_name "my_videos"
 ```
 
 ## Results
