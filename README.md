@@ -5,6 +5,7 @@ This makes unconditional/conditional video training easier to manage without man
 ## Installation
 
 ```bash
+git clone https://github.com/ExponentialML/Video-BLIP2-Preprocessor.git
 pip install -r requirements.txt
 ```
 
