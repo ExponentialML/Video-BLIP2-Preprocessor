@@ -192,21 +192,21 @@ class PreProcessVideos:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--config_name', help="The name of the configuration.", default='My Config')
-    parser.add_argument('--config_save_name', help="The name of the config file that's saved.", default='my_config')
-    parser.add_argument('--video_directory', help="The directory where your videos are located.", default='./videos')
-    parser.add_argument('--limit', help="The limit for the amount of frames to be read (num_frames * ~0-0.99)", default=0.85)
+    parser.add_argument('--config_name', help="The name of the configuration.", type=str, default='My Config')
+    parser.add_argument('--config_save_name', help="The name of the config file that's saved.", type=str, default='my_config')
+    parser.add_argument('--video_directory', help="The directory where your videos are located.", type=str, default='./videos')
+    parser.add_argument('--limit', help="The limit for the amount of frames to be read (num_frames * ~0-0.99)", type=float, default=0.85)
     parser.add_argument(
         '--random_start_frame', 
         help="Use random start frame when processing videos. Good for long videos where frames have different scenes and meanings.", 
         action='store_true', 
         default=True
     )
-    parser.add_argument('--beam_amount', help="Amount for BLIP beam search.", default=7)
-    parser.add_argument('--prompt_amount', help="The amount of prompts per video that is processed.", default=25)
-    parser.add_argument('--min_prompt_length', help="Minimum words required in prompt.", default=15)
-    parser.add_argument('--max_prompt_length', help="Maximum words required in prompt.", default=30)
-    parser.add_argument('--save_dir', help="The directory to save the config to.", default=f"{os.getcwd()}/train_data")
+    parser.add_argument('--beam_amount', help="Amount for BLIP beam search.", type=int, default=7)
+    parser.add_argument('--prompt_amount', help="The amount of prompts per video that is processed.", type=int, default=25)
+    parser.add_argument('--min_prompt_length', help="Minimum words required in prompt.", type=int, default=15)
+    parser.add_argument('--max_prompt_length', help="Maximum words required in prompt.", type=int, default=30)
+    parser.add_argument('--save_dir', help="The directory to save the config to.", type=str, default=f"{os.getcwd()}/train_data")
 
     args = parser.parse_args()
 
