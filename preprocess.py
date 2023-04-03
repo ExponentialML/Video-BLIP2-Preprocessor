@@ -1,15 +1,20 @@
 import torch
+import torchvision
 import json
 import os
 import random 
 import numpy as np
 import argparse
+import decord
 
+from einops import rearrange
 from torchvision import transforms
 from tqdm import tqdm
 from PIL import Image
 from decord import VideoReader, cpu
 from transformers import Blip2Processor, Blip2ForConditionalGeneration
+
+decord.bridge.set_bridge('torch')
 
 class PreProcessVideos:
     def __init__(
@@ -17,8 +22,9 @@ class PreProcessVideos:
             config_name,
             config_save_name,
             video_directory,
-            limit,
             random_start_frame,
+            clip_frame_data,
+            max_frames,
             beam_amount,
             prompt_amount,
             min_prompt_length,
@@ -29,8 +35,9 @@ class PreProcessVideos:
         # Paramaters for parsing videos
         self.prompt_amount = prompt_amount
         self.video_directory = video_directory
-        self.limit = limit
         self.random_start_frame = random_start_frame
+        self.clip_frame_data = clip_frame_data
+        self.max_frames = max_frames
         self.vid_types = (".mp4", ".avi", ".mov", ".webm", ".flv", ".mjpeg")
 
         # Parameters for BLIP2
@@ -42,7 +49,6 @@ class PreProcessVideos:
 
         # Helper parameters
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.limit_msg = False
         self.save_dir = save_dir
 
         # Config parameters
@@ -94,22 +100,11 @@ class PreProcessVideos:
             self, 
             video_reader: VideoReader, 
             num_frames: int, 
-            limit: float, 
             random_start_frame=True
         ):
-        limit_fix = 0.75
-        random.seed()
 
-        if limit > 1:
-            if not self.limit_msg:
-                print(f"Limit parameter cannot be greater than 1. setting to {limit_fix}")
-                self.limit_msg = True
-            limit = limit_fix
-
-        frame_number = random.randrange(0, int(num_frames * limit)) if random_start_frame else 0
-        frame_to_np = video_reader[frame_number].asnumpy()
-
-        frame = torch.from_numpy(frame_to_np).permute(2,0,1)
+        frame_number = random.randrange(0, int(num_frames)) if random_start_frame else 0
+        frame = video_reader[frame_number].permute(2,0,1)
         image = transforms.ToPILImage()(frame).convert("RGB")
 
         return frame_number, image
@@ -128,13 +123,25 @@ class PreProcessVideos:
         
         return generated_text
     
+    def get_out_paths(self, prompt, frame_number):
+        out_name= f"{prompt}_{str(frame_number)}"
+        save_path = f"{self.save_dir}/{self.config_save_name}"
+        save_filepath = f"{save_path}/{out_name}.mp4"
+
+        return out_name, save_path, save_filepath
 
     def save_train_config(self, config: dict):
         os.makedirs(self.save_dir, exist_ok=True)
 
         save_json = json.dumps(config, indent=4)
-        with open(f"{self.save_dir}/{self.config_save_name}.json", 'w') as f:
+        save_dir = f"{self.save_dir}/{self.config_save_name}"
+        
+        with open(f"{save_dir}.json", 'w') as f:
             f.write(save_json)
+
+    def save_video(self, save_path, save_filepath, frames):
+        os.makedirs(save_path, exist_ok=True)
+        torchvision.io.write_video(save_filepath, frames, fps=30)
 
     # Main loop for processing all videos.
     def process_videos(self):
@@ -172,14 +179,34 @@ class PreProcessVideos:
                             frame_number, image = self.video_processor(
                                 video_reader, 
                                 num_frames, 
-                                self.limit,
                                 self.random_start_frame
                                 )
                             prompt = self.process_blip(image)
                             video_data = self.build_video_data(frame_number, prompt)
-                            video_config["data"].append(video_data)
-                        
+
+                            if self.clip_frame_data:
+
+                                # Minimum value, frame number, max value (length of entire video)
+                                max_range = len(video_reader)
+                                frame_number = sorted((0, frame_number, max_range))[1]
+
+                                frame_range = range(frame_number, max_range)
+                                frame_range_nums= list(frame_range)
+
+                                frames = video_reader.get_batch(frame_range_nums[:self.max_frames])
+
+                                out_name, save_path, save_filepath = self.get_out_paths(prompt, frame_number)
+                                
+                                self.save_video(save_path, save_filepath, frames)
+
+                                video_data['clip_path'] = save_filepath
+                                video_config["data"].append(video_data)
+
+                            else:
+                                video_config["data"].append(video_data)
+
                         config['data'].append(video_config)
+
                     except Exception as e:
                         print(e)
                         continue
@@ -195,13 +222,19 @@ if __name__ == "__main__":
     parser.add_argument('--config_name', help="The name of the configuration.", type=str, default='My Config')
     parser.add_argument('--config_save_name', help="The name of the config file that's saved.", type=str, default='my_config')
     parser.add_argument('--video_directory', help="The directory where your videos are located.", type=str, default='./videos')
-    parser.add_argument('--limit', help="The limit for the amount of frames to be read (num_frames * ~0-0.99)", type=float, default=0.85)
     parser.add_argument(
         '--random_start_frame', 
         help="Use random start frame when processing videos. Good for long videos where frames have different scenes and meanings.", 
         action='store_true', 
         default=True
     )
+    parser.add_argument(
+        '--clip_frame_data', 
+        help="Save the frames as video clips to HDD/SDD. Videos clips are saved in the same folder as your json directory.", 
+        action='store_true', 
+        default=False
+    )
+    parser.add_argument('--max_frames', help="Maximum frames for clips when --clip_frame_data is enabled.", type=int, default=60)
     parser.add_argument('--beam_amount', help="Amount for BLIP beam search.", type=int, default=7)
     parser.add_argument('--prompt_amount', help="The amount of prompts per video that is processed.", type=int, default=25)
     parser.add_argument('--min_prompt_length', help="Minimum words required in prompt.", type=int, default=15)
