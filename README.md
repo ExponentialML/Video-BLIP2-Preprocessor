@@ -16,6 +16,12 @@ pip install -r requirements.txt
 python preprocess.py --video_directory <your path of videos (vid1.mp4, vd2.mp4, etc.)> --config_name "My Videos" --config_save_name "my_videos"
 ```
 
+#### If you wish to save the videos as individual clips, you can pass the `--clip_frame_data` argument like so:
+
+```bash
+python preprocess.py --clip_frame_data --video_directory 'videos' --config_name "My Videos" --config_save_name "my_videos"
+```
+
 ## Results
 After running, you should get a JSON like this. You can then parse it any script that supports reading JSON files.
 Here is psuedo code of what your config may look like.
@@ -30,7 +36,11 @@ Here is psuedo code of what your config may look like.
             "data": [
                 {
                     "frame_index": 134,
-                    "prompt": "a person is riding a bike on a busy street."
+                    "prompt": "a person is riding a bike on a busy street.",
+                    
+                    // When the argument --clip_frame_data is passed.
+                    // This is applied to all items in 'data', but shown once here as an example.
+                    "clip_path": "./my_videos/a person is riding a bike on a busy street_134.mp4" 
                 },
                 {
                     "frame_index": 745,
@@ -52,7 +62,9 @@ Here is psuedo code of what your config may look like.
 
 --video_directory, help="The directory where your videos are located.", default='./videos'
 
---limit, help="The limit for the amount of frames to be read (num_frames * ~0-0.99)", default=0.85
+--clip_frame_data, help="Save the frames as video clips to HDD/SDD. Videos clips are saved in the same folder as your json directory.", default=False
+
+--max_frames, help="Maximum frames for clips when --clip_frame_data is enabled.", default=60
 
 --random_start_frame, 
 help="Use random start frame when processing videos. Good for long videos where frames have different scenes and meanings.", 
