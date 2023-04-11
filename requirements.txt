@@ -4,3 +4,4 @@ tqdm
 pillow
 decord
 transformers
+av
