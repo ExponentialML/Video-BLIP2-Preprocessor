@@ -100,14 +100,19 @@ class PreProcessVideos:
             self, 
             video_reader: VideoReader, 
             num_frames: int, 
-            random_start_frame=True
+            random_start_frame=True,
+            frame_num=0
         ):
 
-        frame_number = random.randrange(0, int(num_frames)) if random_start_frame else 0
+        frame_number = (
+            random.randrange(0, int(num_frames)) if random_start_frame else frame_num
+            )
         frame = video_reader[frame_number].permute(2,0,1)
         image = transforms.ToPILImage()(frame).convert("RGB")
-
         return frame_number, image
+
+    def get_frame_range(self, derterministic):
+        return range(self.prompt_amount) if self.random_start_frame else derterministic
 
     def process_blip(self, image: Image):
         inputs = self.processor(images=image, return_tensors="pt").to(self.device, torch.float16)
@@ -159,9 +164,13 @@ class PreProcessVideos:
                 if video.endswith(self.vid_types):
                     video_path = f"{self.video_directory}/{video}"
                     video_reader = None
-
+                    derterministic_range = None
+                    video_len = 0
                     try:
-                        video_reader = VideoReader(video_path, ctx=cpu(0))                
+                        video_reader = VideoReader(video_path, ctx=cpu(0))
+                        video_len = len(video_reader)
+                        frame_step = abs(video_len // self.prompt_amount)
+                        derterministic_range = range(1, abs(video_len - 1), frame_step)          
                     except:
                         print(f"Error loading {video_path}. Video may be unsupported or corrupt.")
                         continue
@@ -173,22 +182,25 @@ class PreProcessVideos:
 
                         # Secondary loop that process a specified amount of prompts, selects a random frame, then appends it.
                         for i in tqdm(
-                                range(self.prompt_amount), 
+                                self.get_frame_range(derterministic_range), 
                                 desc=f"Processing {os.path.basename(video_path)}"
                             ):
                             frame_number, image = self.video_processor(
                                 video_reader, 
                                 num_frames, 
-                                self.random_start_frame
-                                )
+                                self.random_start_frame,
+                                frame_num=i
+                            )
+
                             prompt = self.process_blip(image)
                             video_data = self.build_video_data(frame_number, prompt)
 
                             if self.clip_frame_data:
 
                                 # Minimum value, frame number, max value (length of entire video)
-                                max_range = len(video_reader)
-                                frame_number = sorted((0, frame_number, max_range))[1]
+                                max_range = abs(len(video_reader) - 1)
+                                frame_number = i
+                                frame_number = sorted((1, frame_number, max_range))[1]
 
                                 frame_range = range(frame_number, max_range)
                                 frame_range_nums= list(frame_range)
@@ -226,7 +238,7 @@ if __name__ == "__main__":
         '--random_start_frame', 
         help="Use random start frame when processing videos. Good for long videos where frames have different scenes and meanings.", 
         action='store_true', 
-        default=True
+        default=False
     )
     parser.add_argument(
         '--clip_frame_data', 
