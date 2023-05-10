@@ -22,6 +22,12 @@ python preprocess.py --video_directory <your path of videos (vid1.mp4, vd2.mp4, 
 python preprocess.py --clip_frame_data --video_directory 'videos' --config_name "My Videos" --config_save_name "my_videos"
 ```
 
+#### If you wish to use multiple threads, you can pass the `--maxworkers` argument like so(If you don't pass anything, it defaults to 1 thread):
+
+```bash
+python preprocess.py --video_directory 'videos' --config_name "My Videos" --config_save_name "my_videos" --max_workers=4
+```
+
 ## Results
 After running, you should get a JSON like this. You can then parse it any script that supports reading JSON files.
 Here is psuedo code of what your config may look like.
