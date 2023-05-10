@@ -7,4 +7,3 @@ transformers
 av
 einops
 accelerate
-mxnet
