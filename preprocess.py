@@ -79,7 +79,8 @@ class PreProcessVideos:
     # Dict for video frames and prompts / captions.
     # Gets the frame index, then gets a caption for the that frame and stores it.
     # {base_config: data -> [{name, num_frames, data: {frame_index, prompt}}]}
-    def build_video_data(self, frame_index: int, prompt: str):
+    @staticmethod
+    def build_video_data(frame_index: int, prompt: str):
         return {
             "frame_index": frame_index,
             "prompt": prompt
