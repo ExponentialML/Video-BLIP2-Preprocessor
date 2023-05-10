@@ -114,7 +114,7 @@ class PreProcessVideos:
             random.randrange(0, int(num_frames)
                              ) if random_start_frame else frame_num
         )
-        frame = video_reader[frame_number].permute(2, 0, 1)
+        frame = video_reader[frame_number].transpose((2, 0, 1))
         image = transforms.ToPILImage()(frame).convert("RGB")
         return frame_number, image
 
@@ -181,7 +181,7 @@ class PreProcessVideos:
                 if i > 10:
                     break
                 i += 1
-
+        print('max_workers>>>>>>>>', self.max_workers)
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             futures = []
             for video_path in videos:
