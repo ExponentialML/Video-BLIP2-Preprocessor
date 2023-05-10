@@ -259,7 +259,7 @@ class PreProcessVideos:
                 else:
                     video_config["data"].append(video_data)
 
-            config['data'].append(video_config)
+            return video_config
 
         except Exception as e:
             print(e)
