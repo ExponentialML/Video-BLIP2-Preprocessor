@@ -16,8 +16,6 @@ from transformers import Blip2Processor, Blip2ForConditionalGeneration
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
-decord.bridge.set_bridge('torch')
-
 
 class PreProcessVideos:
     def __init__(
@@ -99,24 +97,6 @@ class PreProcessVideos:
 
         self.processor = processor
         self.blip_model = model
-
-    # Process the frames to get the length and image.
-    # The limit parameter ensures we don't get near the max frame length.
-    # @staticmethod
-    # def video_processor(
-    #     video_reader: VideoReader,
-    #     num_frames: int,
-    #     random_start_frame=True,
-    #     frame_num=0
-    # ):
-
-    #     frame_number = (
-    #         random.randrange(0, int(num_frames)
-    #                          ) if random_start_frame else frame_num
-    #     )
-    #     frame = video_reader[frame_number].transpose((2, 0, 1))
-    #     image = transforms.ToPILImage()(frame).convert("RGB")
-    #     return frame_number, image
     
     @staticmethod
     def video_processor(
@@ -125,14 +105,11 @@ class PreProcessVideos:
         random_start_frame=True,
         frame_num=0
     ):
-
         frame_number = (
             random.randrange(0, int(num_frames)
                             ) if random_start_frame else frame_num
         )
-        import pdb; pdb.set_trace()
-        frame = video_reader[frame_number]
-        frame = torch.transpose(frame, (2, 0, 1))
+        frame = video_reader[frame_number].permute(2,0,1)
         image = transforms.ToPILImage(mode="RGB")(frame)
         return frame_number, image
 
@@ -218,6 +195,7 @@ class PreProcessVideos:
 
     @staticmethod
     def process_video(video_path, clip_frame_data, max_frames, prompt_amount, config, random_start_frame, processor, device, blip_model, beam_amount, min_length, max_length, save_dir, config_save_name):
+        decord.bridge.set_bridge('torch')
         video_reader = None
         derterministic_range = None
         video_len = 0
