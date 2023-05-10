@@ -170,15 +170,11 @@ class PreProcessVideos:
             os.walk(self.video_directory),
             desc=f"Processing videos in {self.video_directory}"
         ):
-            i = 0
             for video in files:
                 if video.endswith(self.vid_types):
                     video_path = f"{self.video_directory}/{video}"
                     videos.append(video_path)
-                if i > 10:
-                    break
-                i += 1
-        print('max_workers>>>>>>>>', self.max_workers)
+
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             futures = []
             for video_path in videos:
