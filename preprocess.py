@@ -102,6 +102,22 @@ class PreProcessVideos:
 
     # Process the frames to get the length and image.
     # The limit parameter ensures we don't get near the max frame length.
+    # @staticmethod
+    # def video_processor(
+    #     video_reader: VideoReader,
+    #     num_frames: int,
+    #     random_start_frame=True,
+    #     frame_num=0
+    # ):
+
+    #     frame_number = (
+    #         random.randrange(0, int(num_frames)
+    #                          ) if random_start_frame else frame_num
+    #     )
+    #     frame = video_reader[frame_number].transpose((2, 0, 1))
+    #     image = transforms.ToPILImage()(frame).convert("RGB")
+    #     return frame_number, image
+    
     @staticmethod
     def video_processor(
         video_reader: VideoReader,
@@ -112,11 +128,13 @@ class PreProcessVideos:
 
         frame_number = (
             random.randrange(0, int(num_frames)
-                             ) if random_start_frame else frame_num
+                            ) if random_start_frame else frame_num
         )
-        frame = video_reader[frame_number].transpose((2, 0, 1))
-        image = transforms.ToPILImage()(frame).convert("RGB")
+        import pdb; pdb.set_trace()
+        frame = video_reader[frame_number].transpose(2, 0, 1)
+        image = transforms.ToPILImage(mode="RGB")(frame)
         return frame_number, image
+
 
     @staticmethod
     def get_frame_range(derterministic, prompt_amount, random_start_frame):
