@@ -14,7 +14,6 @@ from PIL import Image
 from decord import VideoReader, cpu
 from transformers import Blip2Processor, Blip2ForConditionalGeneration
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import mxnet.ndarray as nd
 
 
 decord.bridge.set_bridge('torch')
@@ -133,7 +132,7 @@ class PreProcessVideos:
         )
         import pdb; pdb.set_trace()
         frame = video_reader[frame_number]
-        frame = nd.transpose(frame, (2, 0, 1))
+        frame = torch.transpose(frame, (2, 0, 1))
         image = transforms.ToPILImage(mode="RGB")(frame)
         return frame_number, image
 
