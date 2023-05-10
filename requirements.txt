@@ -5,3 +5,5 @@ pillow
 decord
 transformers
 av
+einops
+accelerate
