@@ -106,4 +106,5 @@ default=True
 
 --save_dir, help="The directory to save the config to.", default=f"{os.getcwd()}/train_data"
 
+--max_workers, help="Number of threads that execute this job. It defaults to 1 if not specified.", default=1
 ```
