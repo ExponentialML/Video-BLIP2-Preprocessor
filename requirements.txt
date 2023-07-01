@@ -3,5 +3,5 @@ torchvision
 tqdm
 pillow
 decord
-transformers
+git+https://github.com/huggingface/transformers
 av
