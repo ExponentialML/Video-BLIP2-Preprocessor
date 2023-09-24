@@ -22,16 +22,22 @@ python preprocess.py --video_directory <your path of videos (vid1.mp4, vd2.mp4, 
 python preprocess.py --clip_frame_data --video_directory 'videos' --config_name "My Videos" --config_save_name "my_videos"
 ```
 
+#### If you wish to use multiple threads, you can pass the `--maxworkers` argument like so(If you don't pass anything, it defaults to 1 thread):
+
+```bash
+python preprocess.py --video_directory 'videos' --config_name "My Videos" --config_save_name "my_videos" --max_workers=4
+```
+
 ## Results
 After running, you should get a JSON like this. You can then parse it any script that supports reading JSON files.
-Here is psuedo code of what your config may look like.
+Here is psuedo code of what your config may look like. Data has keys as the video filename
 
 ```js
 {
     "name": "My Videos",
-    "data": [
-        {
-            "video_path": "./videos/video.mp4",
+    "data": {
+        "video1.mp4": {
+            "video_path": "./videos/video1.mp4",
             "num_frames": 1000,
             "data": [
                 {
@@ -49,8 +55,27 @@ Here is psuedo code of what your config may look like.
                 ...
             ]
         },
+        "video2.mp4": {
+            "video_path": "./videos/video2.mp4",
+            "num_frames": 100,
+            "data": [
+                {
+                    "frame_index": 33,
+                    "prompt": "a person is riding a bluecar.",
+                    
+                    // When the argument --clip_frame_data is passed.
+                    // This is applied to all items in 'data', but shown once here as an example.
+                    "clip_path": "./my_videos/a person is riding a bluecar_33.mp4" 
+                },
+                {
+                    "frame_index": 70,
+                    "prompt": "a person is riding a bluecar."
+                },
+                ...
+            ]
+        },
         ...
-    ]
+    }
 }
 ```
 
@@ -81,4 +106,5 @@ default=True
 
 --save_dir, help="The directory to save the config to.", default=f"{os.getcwd()}/train_data"
 
+--max_workers, help="Number of threads that execute this job. It defaults to 1 if not specified.", default=1
 ```
