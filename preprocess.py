@@ -169,8 +169,11 @@ class PreProcessVideos:
                     try:
                         video_reader = VideoReader(video_path, ctx=cpu(0))
                         video_len = len(video_reader)
-                        frame_step = abs(video_len // self.prompt_amount)
-                        derterministic_range = range(1, abs(video_len - 1), frame_step)          
+                        if video_len < self.prompt_amount:
+                            frame_step = 1
+                        else:
+                            frame_step = abs(video_len // self.prompt_amount)
+                        derterministic_range = range(1, abs(video_len - 1), frame_step)
                     except:
                         print(f"Error loading {video_path}. Video may be unsupported or corrupt.")
                         continue
